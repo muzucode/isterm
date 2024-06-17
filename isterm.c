@@ -31,8 +31,12 @@ void printListTestEnvironments() {
 }
 
 char** parseTokens(char* input, int* tokensCount) {
-    // Initialize tokensCount
+
+    // Duplicate the input arg so we retain its value despite
+    // strtok
     char* inputToParse = strdup(input);
+
+    // Initialize tokensCount
     *tokensCount = 0;
 
     // Allocate memory for tokens array
@@ -46,7 +50,7 @@ char** parseTokens(char* input, int* tokensCount) {
     char* token = strtok(inputToParse, " ");
 
     // Loop through all tokens
-    while (token != NULL && *tokensCount < 16) {
+    while (token != NULL && *tokensCount < MAX_TOKENS_AMOUNT) {
         tokens[*tokensCount] = strdup(token);
         if (tokens[*tokensCount] == NULL) {
             perror("Error strdup a token");
@@ -59,6 +63,8 @@ char** parseTokens(char* input, int* tokensCount) {
         (*tokensCount)++;
         token = strtok(NULL, " ");
     }
+
+    free(inputToParse);
 
     return tokens;
 }
