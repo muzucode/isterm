@@ -6,6 +6,7 @@
 // This shell administers usage of test environments
 
 #define SHELL_PREFIX "SH>"
+#define MAX_TOKENS_AMOUNT 16
 
 typedef struct {
     char* label;
@@ -30,124 +31,124 @@ void printListTestEnvironments() {
 }
 
 char** parseTokens(char* input, int* tokensCount) {
-    // Start here and think about mallocing, reallocing, etc.
-    printf("Received input: %s\n", input);
-    char* argsBuf[16];    
+    // Initialize tokensCount
+    char* inputToParse = strdup(input);
+    *tokensCount = 0;
+
+    // Allocate memory for tokens array
+    char** tokens = (char**)malloc(MAX_TOKENS_AMOUNT * sizeof(char*));
+    if (tokens == NULL) {
+        perror("Error mallocing tokens in parseTokens");
+        return NULL;
+    }
 
     // Begin strtok
-    char* token = strtok(input, " ");
-    // Capture the first token as an arg
-    argsBuf[*tokensCount] = token;
+    char* token = strtok(inputToParse, " ");
 
-    // Loop through remaining tokens
-    while( token != NULL ) {
-        token = strtok(NULL, " ");
-        printf("Made it here\n");
-
-        (*tokensCount)++;
-        // Add the token str pointer to the argsBuf
-        argsBuf[*tokensCount] = token;
-    }
-
-
-    // Form the tokens variable for returning
-    char** tokens = (char**)malloc(sizeof(char*) * (*tokensCount));
-    if(tokens == NULL) {
-        perror("Error mallocing tokens in parseTokens");
-    }
-    for(int i = 0; i < *tokensCount; i++) {
-        tokens[i] = (char*)malloc(sizeof(strlen(argsBuf[i])));
-        if(tokens[i] == NULL) {
-            perror("Error mallocing a token");
+    // Loop through all tokens
+    while (token != NULL && *tokensCount < 16) {
+        tokens[*tokensCount] = strdup(token);
+        if (tokens[*tokensCount] == NULL) {
+            perror("Error strdup a token");
+            for (int i = 0; i < *tokensCount; i++) {
+                free(tokens[i]);
+            }
+            free(tokens);
+            return NULL;
         }
-        tokens[i] = strdup(argsBuf[i]);
+        (*tokensCount)++;
+        token = strtok(NULL, " ");
     }
 
     return tokens;
-
 }
 
 void listenForInput() {
     char buf[128];
-    char* input;
+    char* input = NULL;
     char** tokens;
-    int tokensCount = 0;
+    int tokensCount;
     TestEnvironment* testEnvironment;
+
+    // Allocate and initialize the default test environment
     testEnvironment = (TestEnvironment*)malloc(sizeof(TestEnvironment));
-    testEnvironment->label = (char*)malloc(sizeof(buf));
-
-    // Initialize the default test environment
+    if (testEnvironment == NULL) {
+        perror("Error mallocing testEnvironment");
+        exit(1);
+    }
     testEnvironment->label = strdup("-");
+    if (testEnvironment->label == NULL) {
+        perror("Error strdup testEnvironment->label");
+        free(testEnvironment);
+        exit(1);
+    }
 
-
-    while( strcmp(input, "exit") != 0 ) {
+    while (1) {
         printf("(%s) %s ", testEnvironment->label, SHELL_PREFIX);
 
-        while ( fgets(buf, sizeof(buf), stdin) ) {
-
-
-            // Read input from buffer
-            buf[strcspn(buf, "\n")] = '\0';
-            input = (char*)malloc(strlen(buf) + 1);
-            if(input == NULL) {
-                perror("Error mallocing input");
-            }
-            strcpy(input, buf);
-
-            tokens = parseTokens(input, &tokensCount);        
-            for(int i = 0; i < tokensCount; i++) {
-                printf("Token %d: %s\n", i, tokens[i]);
-            }    
-
-            if(strcmp(input, "exit") == 0) {
-                printf("%s", "Seeya!\n");
-                break;
-            }
-            // Use the correct command
-            else if (strcmp(input, "te:list") == 0) {
-                printf("Available test environments: \n");
-            }
-            else if(strcmp(input, "te:use") == 0) {
-                testEnvironment->label = strdup("default");
-            }            
-            else if(strcmp(input, "te:start") == 0) {
-                printf("Starting test environment...\n");
-            }
-            else if(strcmp(input, "te:stop") == 0) {
-                printf("Stopping test environment...\n");
-                testEnvironmentStop();
-            } else {
-                printf("Unrecognized command \"%s\"\n", input);
-            }
-
-            // Free the tokens and all their data
-            for(int i = 0 ; i < tokensCount; i++) {
-                printf("Freeing memory for token: %s\n", tokens[i]);
-                free(tokens[i]);
-            }
-            printf("Freeing memory for the entire input pointer: %s\n", input);
-            free(tokens);
-            free(input);
-
-
+        if (fgets(buf, sizeof(buf), stdin) == NULL) {
+            perror("Error reading input");
             break;
         }
 
+        buf[strcspn(buf, "\n")] = '\0';  // Remove newline character
+
+        input = strdup(buf);
+        if (input == NULL) {
+            perror("Error strdup input");
+            break;
+        }
+
+        tokens = parseTokens(input, &tokensCount);
+        if (tokens == NULL) {
+            printf("Tokens is NULL for some reason... restarting loop\n");
+            free(input);
+            continue;
+        }
+
+        for (int i = 0; i < tokensCount; i++) {
+            printf("Token %d: %s\n", i, tokens[i]);
+        }
+
+        if (tokensCount > 0 && strcmp(tokens[0], "exit") == 0) {
+            printf("Seeya!\n");
+            for (int i = 0; i < tokensCount; i++) {
+                free(tokens[i]);
+            }
+            free(tokens);
+            free(input);
+            break;
+        } else if (tokensCount > 0 && strcmp(tokens[0], "te:list") == 0) {
+            printf("Available test environments: \n");
+        } else if (tokensCount > 0 && strcmp(tokens[0], "te:use") == 0) {
+            free(testEnvironment->label);
+            testEnvironment->label = strdup("default");
+        } else if (tokensCount > 0 && strcmp(tokens[0], "te:start") == 0) {
+            printf("Starting test environment...\n");
+        } else if (tokensCount > 0 && strcmp(tokens[0], "te:stop") == 0) {
+            printf("Stopping test environment...\n");
+            testEnvironmentStop();
+        } else {
+            printf("Unrecognized command \"%s\"\n", input);
+        }
+
+        // Free the tokens and all their data
+        for (int i = 0; i < tokensCount; i++) {
+            free(tokens[i]);
+        }
+        free(tokens);
+        free(input);
     }
 
-
+    free(testEnvironment->label);
+    free(testEnvironment);
 }
-
 
 void startServer() {
 
 }
 
 int main() {
-
-
     listenForInput();
-
     return 0;
 }
-
