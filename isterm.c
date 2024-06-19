@@ -5,7 +5,7 @@
 
 // This shell administers usage of test environments
 
-#define SHELL_PREFIX "SH>"
+#define SHELL_PREFIX "isT>"
 #define MAX_TOKENS_AMOUNT 16
 
 typedef struct {
