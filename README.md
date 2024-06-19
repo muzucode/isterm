@@ -1,5 +1,3 @@
-# Isterm
-
 ## Purpose
 
 Manage a Docker-Compose based testing environment that I use to conduct local penetration testing.
