@@ -110,6 +110,10 @@ char** parseTokens(char* input, int* tokensCount) {
     return tokens;
 }
 
+void setActiveTestingEnvironment(char* environmentName) {
+
+}
+
 void listenForInput() {
     char buf[128];
     char* input = NULL;
@@ -153,10 +157,6 @@ void listenForInput() {
             continue;
         }
 
-        for (int i = 0; i < tokensCount; i++) {
-            printf("Token %d: %s\n", i, tokens[i]);
-        }
-
         if (tokensCount > 0 && strcmp(tokens[0], "exit") == 0) {
             printf("Seeya!\n");
             for (int i = 0; i < tokensCount; i++) {
@@ -166,10 +166,19 @@ void listenForInput() {
             free(input);
             break;
         } else if (tokensCount > 0 && strcmp(tokens[0], "te:list") == 0) {
-            printf("Available test environments: \n");
+            printf("default\n");
+            printf("seoul-network\n");
         } else if (tokensCount > 0 && strcmp(tokens[0], "te:use") == 0) {
             free(testEnvironment->label);
-            testEnvironment->label = strdup("d");
+            if(tokens[1] != NULL) {
+                testEnvironment->label = strdup(tokens[1]);
+                setActiveTestingEnvironment(tokens[1]);
+            } else {
+                char* defaultEnvironment = "d";
+                testEnvironment->label = strdup(defaultEnvironment);
+                setActiveTestingEnvironment(defaultEnvironment);
+            }
+
         } else if (tokensCount > 0 && strcmp(tokens[0], "te:start") == 0) {
             printf("Starting test environment...\n");
             testEnvironmentStart();
