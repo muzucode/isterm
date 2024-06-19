@@ -169,7 +169,7 @@ void listenForInput() {
             printf("Available test environments: \n");
         } else if (tokensCount > 0 && strcmp(tokens[0], "te:use") == 0) {
             free(testEnvironment->label);
-            testEnvironment->label = strdup("default");
+            testEnvironment->label = strdup("d");
         } else if (tokensCount > 0 && strcmp(tokens[0], "te:start") == 0) {
             printf("Starting test environment...\n");
             testEnvironmentStart();
