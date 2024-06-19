@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include <string.h>
 typedef struct {
@@ -67,31 +68,50 @@ void promptTestEnvironmentCreation() {
 }
 
 void readTestEnvironmentsFromConfig() {
-    FILE* file = fopen("environments.toml", "r");
+    const char* environmentsFile   = "environments.toml";
+    FILE* file;
     char buf[512];
     char tomlKeyHeaderBuf[64];
+    char* environmentKey;
+    TestEnvironment te;
+    bool insideEnvConfigBlock = false;
+
+
+    file = fopen(environmentsFile, "r");
 
     fseek(file, 0, SEEK_END);
     int fileSize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
     
-
+    // Parse TOML
     while(fgets(buf, sizeof(buf), file)) {
+        // If reading a line that is one character, just a line break... 
+        // mark as no longer inside envConfigBlock and re-loop
+        if(strlen(buf) == 1 && (strcmp(buf, "\n") == 0)) {
+            insideEnvConfigBlock = false;
+            continue;
+        }
         buf[strcspn(buf, "\n")] = '\0'; // null-term the read line
-
+        // Save the toml key if there is one
         if(buf[0] == '[') {
+            insideEnvConfigBlock = true;
             int count = 1;
-            tomlKeyHeaderBuf[count] = buf[count];
-            while(tomlKeyHeaderBuf[count] != ']') {
-                tomlKeyHeaderBuf[count] = buf[count];
-                printf("Reading char: %c\n", buf[count]);
+            tomlKeyHeaderBuf[0] = buf[count];
+            while(buf[count+1] != ']') {
+                tomlKeyHeaderBuf[count] = buf[count+1];
                 count++;
             }
-            tomlKeyHeaderBuf[count+1] = '\0';
+
+            // Null term the toml env key
+            tomlKeyHeaderBuf[count] = '\0';
+
+            // Save environment key
+            te.label = strdup(tomlKeyHeaderBuf);
+            printf("Successfully read a toml key: %s\n", te.label);
+            free(te.label);
         }
 
-        printf("Successfully read the toml key: %s\n", tomlKeyHeaderBuf);
 
     }
 
