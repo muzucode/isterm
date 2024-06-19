@@ -18,12 +18,53 @@ void getActiveEnvironment() {
 
 }
 
-void testEnvironmentStart() {
+int testEnvironmentStart() {
+    pid_t pid;
+    pid = fork();
+
+    if(pid < 0) {
+        perror("Error forking child process\n");
+    } else if (pid == 0) {
+
+        char* dockerComposeFilePath = "/Users/sean/Documents/Coding/Merkbench/testing-environments/docker-instances/docker-compose.yml";
+        char* swarmInitArgs[4] = {"docker","swarm", "init", NULL};
+        execvp(swarmInitArgs[0], swarmInitArgs);
+
+        perror("execvp failed\n");
+        return 1;
+
+        char* stackDeployArgs[6] = {"docker","stack", "deploy", "-c", dockerComposeFilePath, NULL};
+        execvp(stackDeployArgs[0], stackDeployArgs);
+    } else {
+        // Parent process
+        int status;
+        waitpid(pid, &status, 0);  // Wait for the child process to complete
+    }
+
+    return 0;
 
 }
 
-void testEnvironmentStop() {
+int testEnvironmentStop() {
 
+    pid_t p;
+
+    p = fork();
+    if(p < 0) {
+        perror("Error forking child process");
+        return 1;
+    } else if (p == 0) {
+        char* args[5] = {"docker", "swarm", "leave", "--force", NULL};
+        execvp(args[0], args);
+        
+        perror("execvp didn't terminate isterm, signaling an error\n");
+        return 1;
+    } else {
+        int status;
+        waitpid(p, &status, 0);
+    }
+
+    return 0;
 }
 
 void printListTestEnvironments() {
@@ -131,6 +172,7 @@ void listenForInput() {
             testEnvironment->label = strdup("default");
         } else if (tokensCount > 0 && strcmp(tokens[0], "te:start") == 0) {
             printf("Starting test environment...\n");
+            testEnvironmentStart();
         } else if (tokensCount > 0 && strcmp(tokens[0], "te:stop") == 0) {
             printf("Stopping test environment...\n");
             testEnvironmentStop();
