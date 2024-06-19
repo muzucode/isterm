@@ -1,3 +1,4 @@
 *.out
 *.toml
+!*.example.toml
 planning.txt

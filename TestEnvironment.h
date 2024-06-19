@@ -7,6 +7,8 @@
 typedef struct {
     char* label; 
     char* projectRoot;
+    char* start;
+    char* stop;
 } TestEnvironment;
 
 void testEnvironmentToString(TestEnvironment* testEnvironment) {
@@ -63,16 +65,23 @@ int testEnvironmentStop() {
     return 0;
 }
 
-void promptTestEnvironmentCreation() {
-
+void setEnvironmentProperty(char* property, char* value, TestEnvironment* te) {
+    printf("Setting property-- %s:%s\n", property, value);
+    
+    if(strcmp(property, "start") == 0) {
+        te->start = value;
+    }
 }
 
 void readTestEnvironmentsFromConfig() {
     const char* environmentsFile   = "environments.toml";
     FILE* file;
     char buf[512];
-    char tomlKeyHeaderBuf[64];
-    char* environmentKey;
+    char envNameBuf[64];
+    char envPropKeyBuf[64];
+    char envPropValueBuf[512];
+    char* envPropKey;
+    char* envPropValue;
     TestEnvironment te;
     bool insideEnvConfigBlock = false;
 
@@ -93,23 +102,54 @@ void readTestEnvironmentsFromConfig() {
             continue;
         }
         buf[strcspn(buf, "\n")] = '\0'; // null-term the read line
-        // Save the toml key if there is one
+
+        // If encountering an env block...
         if(buf[0] == '[') {
             insideEnvConfigBlock = true;
             int count = 1;
-            tomlKeyHeaderBuf[0] = buf[count];
+            envNameBuf[0] = buf[count];
             while(buf[count+1] != ']') {
-                tomlKeyHeaderBuf[count] = buf[count+1];
+                envNameBuf[count] = buf[count+1];
                 count++;
             }
 
             // Null term the toml env key
-            tomlKeyHeaderBuf[count] = '\0';
+            envNameBuf[count] = '\0';
 
             // Save environment key
-            te.label = strdup(tomlKeyHeaderBuf);
-            printf("Successfully read a toml key: %s\n", te.label);
+            te.label = strdup(envNameBuf);
+            printf("\nLoading test environment from toml: %s\n", te.label);
             free(te.label);
+
+        } else { 
+            
+            // Read the property key
+            int count = 0;
+            while(buf[count] != ' ' && buf[count] != '=') {
+                envPropKeyBuf[count] = buf[count];
+                count++;
+            }
+            envPropKeyBuf[count] = '\0'; // null-term the string
+            envPropKey = strdup(envPropKeyBuf);
+
+            // Find the property value offset from the property key
+            count++;
+            while(buf[count] == ' ' || buf[count] == '=') {
+                count++;
+            }
+
+            // Read the property value
+            int i = 0;
+            while(count < strlen(buf)) {
+                envPropValueBuf[i] = buf[count];
+                i++;
+                count++;
+            }
+            envPropValueBuf[strlen(envPropValueBuf)] = '\0';
+            envPropValue = strdup(envPropValueBuf);
+            
+            setEnvironmentProperty(envPropKey, envPropValue, &te);
+            
         }
 
 
@@ -117,4 +157,9 @@ void readTestEnvironmentsFromConfig() {
 
 
     return;
+}
+
+
+void promptTestEnvironmentCreation() {
+
 }

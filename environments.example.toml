@@ -1,0 +1,11 @@
+[tobemodified]
+description = "tobemodified"
+project-root = "tobemodified"
+technology = "tobemodified"
+start = ["tobemodified"]
+stop = ["tobemodified"]
+
+[vsis-network]
+description = "tobemodified"
+project-root = "tobemodified"
+technology = "tobemodified"
