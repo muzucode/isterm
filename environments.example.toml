@@ -5,7 +5,7 @@ technology = "tobemodified"
 start = ["tobemodified"]
 stop = ["tobemodified"]
 
-[vsis-network]
+[tobemodified2]
 description = "tobemodified"
 project-root = "tobemodified"
 technology = "tobemodified"

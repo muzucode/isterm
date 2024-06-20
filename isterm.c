@@ -150,6 +150,6 @@ void startServer() {
 
 int main() {
     readTestEnvironmentsFromConfig();
-    // listenForInput();
+    listenForInput();
     return 0;
 }
