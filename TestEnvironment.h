@@ -5,6 +5,12 @@
 #include <string.h>
 #include "TestEnvironmentList.h"
 
+TestEnvironment* getActiveTestEnvironment() {
+    // TODO: Implement this, then call this inside of
+    // testEnvironmentStart and testEnvironmentStop
+    TestEnvironment* te;
+    return te;
+}
 
 void testEnvironmentToString(TestEnvironment* testEnvironment) {
     printf("Label: %s\n", testEnvironment->label);
