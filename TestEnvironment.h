@@ -2,14 +2,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
 #include <string.h>
-typedef struct {
-    char* label; 
-    char* projectRoot;
-    char* start;
-    char* stop;
-} TestEnvironment;
+#include "TestEnvironmentList.h"
+
 
 void testEnvironmentToString(TestEnvironment* testEnvironment) {
     printf("Label: %s\n", testEnvironment->label);
@@ -67,13 +62,26 @@ int testEnvironmentStop() {
 
 void setEnvironmentProperty(char* property, char* value, TestEnvironment* te) {
     printf("Setting property-- %s:%s\n", property, value);
-    
+    if(strcmp(property, "description") == 0) {
+        te->description = value;
+    }
+    if(strcmp(property, "technology") == 0) {
+        te->technology = value;
+    }
+    if(strcmp(property, "project-root") == 0) {
+        te->projectRoot = value;
+    }
     if(strcmp(property, "start") == 0) {
         te->start = value;
-    }
+    }    
+    if(strcmp(property, "stop") == 0) {
+        te->stop = value;
+    }    
+
+    
 }
 
-void readTestEnvironmentsFromConfig() {
+TestEnvironmentList* readTestEnvironmentsFromConfig() {
     const char* environmentsFile   = "environments.toml";
     FILE* file;
     char buf[512];
@@ -83,7 +91,11 @@ void readTestEnvironmentsFromConfig() {
     char* envPropKey;
     char* envPropValue;
     TestEnvironment te;
+    TestEnvironment** tes;
     bool insideEnvConfigBlock = false;
+    TestEnvironmentList* environments;
+
+    initTestEnvironmentList(environments);
 
 
     file = fopen(environmentsFile, "r");
@@ -98,7 +110,10 @@ void readTestEnvironmentsFromConfig() {
         // If reading a line that is one character, just a line break... 
         // mark as no longer inside envConfigBlock and re-loop
         if(strlen(buf) == 1 && (strcmp(buf, "\n") == 0)) {
+            printf("Loaded test environment: %s\n", te.start);
+            // Reached end of env block
             insideEnvConfigBlock = false;
+            addTestEnvironment(environments, &te);
             continue;
         }
         buf[strcspn(buf, "\n")] = '\0'; // null-term the read line
@@ -118,11 +133,17 @@ void readTestEnvironmentsFromConfig() {
 
             // Save environment key
             te.label = strdup(envNameBuf);
-            printf("\nLoading test environment from toml: %s\n", te.label);
+            // printf("\nLoading test environment from toml: %s\n", te.label);
             free(te.label);
+            continue;
+        } 
+        // Else encountering a property in an env block
+        else { 
 
-        } else { 
-            
+            // Reset the buffers
+            memset(envPropKeyBuf, 0, sizeof(envPropKeyBuf));
+            memset(envPropValueBuf, 0, sizeof(envPropValueBuf));
+
             // Read the property key
             int count = 0;
             while(buf[count] != ' ' && buf[count] != '=') {
@@ -133,6 +154,7 @@ void readTestEnvironmentsFromConfig() {
             envPropKey = strdup(envPropKeyBuf);
 
             // Find the property value offset from the property key
+            // by iterating past whitespace or the equals sign
             count++;
             while(buf[count] == ' ' || buf[count] == '=') {
                 count++;
@@ -148,18 +170,16 @@ void readTestEnvironmentsFromConfig() {
             envPropValueBuf[strlen(envPropValueBuf)] = '\0';
             envPropValue = strdup(envPropValueBuf);
             
-            setEnvironmentProperty(envPropKey, envPropValue, &te);
-            
+            // Set environment property
+            setEnvironmentProperty(envPropKey, envPropValue, &te);     
+
+            // Free stdup'd char*'s
+            free(envPropKey); 
+            free(envPropValue);      
         }
 
 
     }
 
-
-    return;
-}
-
-
-void promptTestEnvironmentCreation() {
-
+    return environments;
 }
