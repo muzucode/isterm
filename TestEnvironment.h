@@ -61,21 +61,21 @@ int testEnvironmentStop() {
 }
 
 void setEnvironmentProperty(char* property, char* value, TestEnvironment* te) {
-    printf("Setting property-- %s:%s\n", property, value);
+    // printf("Setting property-- %s:%s\n", property, value);
     if(strcmp(property, "description") == 0) {
-        te->description = value;
+        te->description = strdup(value);
     }
     if(strcmp(property, "technology") == 0) {
-        te->technology = value;
+        te->technology = strdup(value);
     }
     if(strcmp(property, "project-root") == 0) {
-        te->projectRoot = value;
+        te->projectRoot = strdup(value);
     }
     if(strcmp(property, "start") == 0) {
-        te->start = value;
+        te->start = strdup(value);
     }    
     if(strcmp(property, "stop") == 0) {
-        te->stop = value;
+        te->stop = strdup(value);
     }    
 
     
@@ -91,7 +91,6 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
     char* envPropKey;
     char* envPropValue;
     TestEnvironment te;
-    TestEnvironment** tes;
     bool insideEnvConfigBlock = false;
     TestEnvironmentList* environments;
 
@@ -106,14 +105,16 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
 
     
     // Parse TOML
-    while(fgets(buf, sizeof(buf), file)) {
+    while(fgets(buf, fileSize, file)) {
         // If reading a line that is one character, just a line break... 
         // mark as no longer inside envConfigBlock and re-loop
         if(strlen(buf) == 1 && (strcmp(buf, "\n") == 0)) {
-            printf("Loaded test environment: %s\n", te.start);
+            if(insideEnvConfigBlock) {
+                addTestEnvironment(environments, &te);
+                printf("Loaded test environment: %s\n", te.label);
+            }
             // Reached end of env block
             insideEnvConfigBlock = false;
-            addTestEnvironment(environments, &te);
             continue;
         }
         buf[strcspn(buf, "\n")] = '\0'; // null-term the read line
@@ -134,7 +135,6 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
             // Save environment key
             te.label = strdup(envNameBuf);
             // printf("\nLoading test environment from toml: %s\n", te.label);
-            free(te.label);
             continue;
         } 
         // Else encountering a property in an env block
