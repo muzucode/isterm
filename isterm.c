@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "TestEnvironment.h"
+#include <fcntl.h>
 
 // This shell administers usage of test environments
 
@@ -17,16 +18,33 @@ void getActiveEnvironment() {
 
 void startTe() {
     printf("Starting test environment...\n");   
+    parseStartCommands(activeTestEnvironment);
+    return;
+
+    
     pid_t p = fork();
-    if(p<0) {
-        perror("Error forking child process\n");
+
+    if (p < 0) {
+        perror("Error forking child process");
         exit(1);
     } else if (p == 0) {
-        printf("In child process\n");
-    } else {
-        printf("In parent process\n");
+        // In child process: redirect stdout to /dev/null
+        int fd = open("/dev/null", O_WRONLY);
+        if (fd != -1) {
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+        } else {
+            perror("Error opening /dev/null");
+            exit(1);
+        }
+        
+        // TODO: Implement Run start command for activeTestEnvironment
+        // char** args = activeTestEnvironment->start;
+        // execvp(args[0], args);
+        exit(0);  // Ensure the child process exits
     }
 }
+
 char** parseTokens(char* input, int* tokensCount) {
 
     // Duplicate the input arg so we retain its value despite
@@ -140,7 +158,6 @@ void listenForInput() {
             }
         } else if (tokensCount > 0 && strcmp(tokens[0], "start") == 0) {
             startTe();
-            printf("Ran command\n");
         } else if (tokensCount > 0 && strcmp(tokens[0], "stop") == 0) {
             printf("Stopping test environment...\n");
             testEnvironmentStop();

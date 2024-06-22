@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#define MAX_START_COMMANDS 6
+
 typedef struct {
     char* label; 
     char* description;
@@ -23,9 +25,8 @@ typedef struct {
 void initTestEnvironmentList(TestEnvironmentList *list) {
     list->size = 0;
     list->capacity = 10; // Initial capacity
-    int totalBytesToAlloc = list->capacity * sizeof(TestEnvironment) + sizeof(TestEnvironmentList);
-    printf("Allocating %d bytes for TestEnvironmentList\n", totalBytesToAlloc);
-    list->environments = (TestEnvironment*)malloc(list->capacity * sizeof(TestEnvironment));
+    int totalBytesToAllocForEnvironments = list->capacity * sizeof(TestEnvironment);
+    list->environments = (TestEnvironment*)malloc(totalBytesToAllocForEnvironments);
     if(list->environments == NULL) {
         perror("Error mallocing TestEnvironmentList");
         exit(1);
@@ -216,3 +217,40 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
     return environments;
 }
 
+void parseStartCommands(TestEnvironment* te) {
+    char** commands;
+    char buf[256];
+
+
+    // Malloc memory for commands
+    commands = (char**)malloc(MAX_START_COMMANDS * sizeof(char*));
+    if(commands == NULL ) {
+        perror("Error mallocing commands\n");
+    }
+
+    // Put string from inside [] into buf
+    int startIndex = 1;
+    int bufIndex = 0;
+    while(te->start[startIndex] != ']') {
+        buf[bufIndex] = te->start[startIndex]; // +1 to get past the first bracket
+        printf("Reading char: %c\n", te->start[startIndex]);
+        startIndex++;
+        bufIndex++;
+    }
+
+    buf[bufIndex] = '\0';
+    printf("Start commands string read into buf:%s\n", buf);
+
+    char* tok = strtok(buf, ",");
+
+    int nTokens = 0;
+    while(tok != NULL) {
+        tok = strtok(NULL, ",");
+        printf("Token %d: %s\n", nTokens, tok);
+        commands[nTokens++] = strdup(tok);
+    }
+
+
+
+    // return commands;
+}
