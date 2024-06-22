@@ -3,7 +3,58 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include "TestEnvironmentList.h"
+
+typedef struct {
+    char* label; 
+    char* description;
+    char* technology;
+    char* projectRoot;
+    char* start;
+    char* stop;
+} TestEnvironment;
+
+typedef struct {
+    TestEnvironment *environments;
+    size_t size;
+    size_t capacity;
+} TestEnvironmentList;
+
+// Initialize the list
+void initTestEnvironmentList(TestEnvironmentList *list) {
+    list->size = 0;
+    list->capacity = 10; // Initial capacity
+    int totalBytesToAlloc = list->capacity * sizeof(TestEnvironment) + sizeof(TestEnvironmentList);
+    printf("Allocating %d bytes for TestEnvironmentList\n", totalBytesToAlloc);
+    list->environments = (TestEnvironment*)malloc(list->capacity * sizeof(TestEnvironment));
+    if(list->environments == NULL) {
+        perror("Error mallocing TestEnvironmentList");
+        exit(1);
+    }
+}
+
+// Add a TestEnvironment to the list
+void addTestEnvironment(TestEnvironmentList *list, TestEnvironment *env) {
+    // Resize the array if needed
+    if (list->size >= list->capacity) {
+        list->capacity *= 2;
+        list->environments = (TestEnvironment*)realloc(list->environments, list->capacity * sizeof(TestEnvironment));
+        if(list->environments == NULL) {
+            perror("Error reallocing TestEnvironmentList");
+            exit(1);
+        }
+    }
+    list->environments[list->size++] = *env;
+}
+
+
+TestEnvironment* findTestEnvironmentByLabel(TestEnvironmentList *list, const char *label) {
+    for (size_t i = 0; i < list->size; i++) {
+        if (strcmp(list->environments[i].label, label) == 0) {
+            return &list->environments[i];
+        }
+    }
+    return NULL; // Not found
+}
 
 TestEnvironment* getActiveTestEnvironment() {
     // TODO: Implement this, then call this inside of
@@ -71,7 +122,7 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
     char envPropValueBuf[512];
     char* envPropKey;
     char* envPropValue;
-    TestEnvironment te;
+    TestEnvironment* te;
     bool insideEnvConfigBlock = false;
     TestEnvironmentList* environments;
 
@@ -91,8 +142,8 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
         // mark as no longer inside envConfigBlock and re-loop
         if(strlen(buf) == 1 && (strcmp(buf, "\n") == 0)) {
             if(insideEnvConfigBlock) {
-                addTestEnvironment(environments, &te);
-                printf("Loaded test environment: %s\n", te.label);
+                addTestEnvironment(environments, te);
+                printf("Loaded test environment: %s\n", te->label);
             }
             // Reached end of env block
             insideEnvConfigBlock = false;
@@ -114,7 +165,7 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
             envNameBuf[count] = '\0';
 
             // Save environment key
-            te.label = strdup(envNameBuf);
+            te->label = strdup(envNameBuf);
             // printf("\nLoading test environment from toml: %s\n", te.label);
             continue;
         } 
@@ -152,7 +203,7 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
             envPropValue = strdup(envPropValueBuf);
             
             // Set environment property
-            setEnvironmentProperty(envPropKey, envPropValue, &te);     
+            setEnvironmentProperty(envPropKey, envPropValue, te);     
 
             // Free stdup'd char*'s
             free(envPropKey); 
@@ -164,3 +215,4 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
 
     return environments;
 }
+

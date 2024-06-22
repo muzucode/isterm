@@ -164,11 +164,21 @@ void listenForInput() {
     free(activeTestEnvironment->label);
 }
 
+void print_stack_limit() {
+    // struct rlimit rl;
+    // if (getrlimit(RLIMIT_STACK, &rl) == 0) {
+    //     printf("Stack size limit: %ld bytes\n", rl.rlim_cur);
+    // } else {
+    //     perror("getrlimit");
+    // }
+}
+
 
 int main() {
+    // print_stack_limit();
     activeTestEnvironment = (TestEnvironment*)malloc(sizeof(TestEnvironment));
     testEnvironmentList = (TestEnvironmentList*)malloc(sizeof(TestEnvironmentList));
-    testEnvironmentList = readTestEnvironmentsFromConfig();
+    testEnvironmentList = readTestEnvironmentsFromConfig(); // malloc for each env in list
     listenForInput();
     return 0;
 }
