@@ -14,6 +14,19 @@ TestEnvironmentList* testEnvironmentList;
 void getActiveEnvironment() {
 
 }
+
+void startTe() {
+    printf("Starting test environment...\n");   
+    pid_t p = fork();
+    if(p<0) {
+        perror("Error forking child process\n");
+        exit(1);
+    } else if (p == 0) {
+        printf("In child process\n");
+    } else {
+        printf("In parent process\n");
+    }
+}
 char** parseTokens(char* input, int* tokensCount) {
 
     // Duplicate the input arg so we retain its value despite
@@ -113,8 +126,8 @@ void listenForInput() {
             free(input);
             break;
         } else if (tokensCount > 0 && strcmp(tokens[0], "list") == 0) {
-            printf("default\n");
-            printf("seoul-network\n");
+            // TODO: Implement printing list of testenvlist
+            printf("TODO: implement\n");
         } else if (tokensCount > 0 && strcmp(tokens[0], "use") == 0) {
 
             // If a testenv argument is provided...
@@ -126,8 +139,8 @@ void listenForInput() {
                 }
             }
         } else if (tokensCount > 0 && strcmp(tokens[0], "start") == 0) {
-            printf("Starting test environment...\n");   
-            testEnvironmentStart();
+            startTe();
+            printf("Ran command\n");
         } else if (tokensCount > 0 && strcmp(tokens[0], "stop") == 0) {
             printf("Stopping test environment...\n");
             testEnvironmentStop();
@@ -151,9 +164,6 @@ void listenForInput() {
     free(activeTestEnvironment->label);
 }
 
-void startServer() {
-
-}
 
 int main() {
     activeTestEnvironment = (TestEnvironment*)malloc(sizeof(TestEnvironment));

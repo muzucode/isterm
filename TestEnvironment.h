@@ -18,32 +18,6 @@ void testEnvironmentToString(TestEnvironment* testEnvironment) {
     printf("Project Root: %s\n", testEnvironment->projectRoot);
 }
 
-int testEnvironmentStart() {
-    pid_t pid;
-    pid = fork();
-
-    if(pid < 0) {
-        perror("Error forking child process\n");
-    } else if (pid == 0) {
-
-        char* dockerComposeFilePath = "/Users/sean/Documents/Coding/Merkbench/testing-environments/docker-instances/docker-compose.yml";
-        char* swarmInitArgs[4] = {"docker","swarm", "init", NULL};
-        execvp(swarmInitArgs[0], swarmInitArgs);
-
-        perror("execvp failed\n");
-        return 1;
-
-        char* stackDeployArgs[6] = {"docker","stack", "deploy", "-c", dockerComposeFilePath, NULL};
-        execvp(stackDeployArgs[0], stackDeployArgs);
-    } else {
-        // Parent process
-        int status;
-        waitpid(pid, &status, 0);  // Wait for the child process to complete
-    }
-
-    return 0;
-
-}
 
 int testEnvironmentStop() {
 
