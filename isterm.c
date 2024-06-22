@@ -8,6 +8,8 @@
 
 #define SHELL_PREFIX "isT>"
 #define MAX_TOKENS_AMOUNT 16
+TestEnvironment* activeTestEnvironment;
+TestEnvironmentList* testEnvironmentList;
 
 void getActiveEnvironment() {
 
@@ -17,6 +19,10 @@ char** parseTokens(char* input, int* tokensCount) {
     // Duplicate the input arg so we retain its value despite
     // strtok
     char* inputToParse = strdup(input);
+    if(inputToParse == NULL) {
+        perror("Error strdup inputToParse");
+        return NULL;
+    }
 
     // Initialize tokensCount
     *tokensCount = 0;
@@ -51,7 +57,14 @@ char** parseTokens(char* input, int* tokensCount) {
     return tokens;
 }
 
-void setActiveTestingEnvironment(char* environmentName) {
+int setActiveTestingEnvironment(char* label) {
+    TestEnvironment* teBuf = findTestEnvironmentByLabel(testEnvironmentList, label);
+    if(teBuf == NULL) {
+        return 1;
+    } else {
+        activeTestEnvironment = teBuf;
+        return 0;
+    }
 
 }
 
@@ -60,23 +73,16 @@ void listenForInput() {
     char* input = NULL;
     char** tokens;
     int tokensCount;
-    TestEnvironment* testEnvironment;
 
-    // Allocate and initialize the default test environment
-    testEnvironment = (TestEnvironment*)malloc(sizeof(TestEnvironment));
-    if (testEnvironment == NULL) {
-        perror("Error mallocing testEnvironment");
-        exit(1);
-    }
-    testEnvironment->label = strdup("-");
-    if (testEnvironment->label == NULL) {
+
+    activeTestEnvironment->label = strdup("-");
+    if (activeTestEnvironment->label == NULL) {
         perror("Error strdup testEnvironment->label");
-        free(testEnvironment);
         exit(1);
     }
 
     while (1) {
-        printf("(%s) %s ", testEnvironment->label, SHELL_PREFIX);
+        printf("(%s) %s ", activeTestEnvironment->label, SHELL_PREFIX);
 
         if (fgets(buf, sizeof(buf), stdin) == NULL) {
             perror("Error reading input");
@@ -106,23 +112,23 @@ void listenForInput() {
             free(tokens);
             free(input);
             break;
-        } else if (tokensCount > 0 && strcmp(tokens[0], "te:list") == 0) {
+        } else if (tokensCount > 0 && strcmp(tokens[0], "list") == 0) {
             printf("default\n");
             printf("seoul-network\n");
-        } else if (tokensCount > 0 && strcmp(tokens[0], "te:use") == 0) {
-            free(testEnvironment->label);
+        } else if (tokensCount > 0 && strcmp(tokens[0], "use") == 0) {
+
+            // If a testenv argument is provided...
             if(tokens[1] != NULL) {
-                testEnvironment->label = strdup(tokens[1]);
-                setActiveTestingEnvironment(tokens[1]);
-            } else {
-                char* defaultEnvironment = "d";
-                testEnvironment->label = strdup(defaultEnvironment);
-                setActiveTestingEnvironment(defaultEnvironment);
+                int result = setActiveTestingEnvironment(tokens[1]);
+                if(result != 0) {
+                    printf("Invalid environment \"%s\". Run \"list\" to see a list of available environments.\n", tokens[1]);
+                    continue;
+                }
             }
-        } else if (tokensCount > 0 && strcmp(tokens[0], "te:start") == 0) {
-            printf("Starting test environment...\n");
+        } else if (tokensCount > 0 && strcmp(tokens[0], "start") == 0) {
+            printf("Starting test environment...\n");   
             testEnvironmentStart();
-        } else if (tokensCount > 0 && strcmp(tokens[0], "te:stop") == 0) {
+        } else if (tokensCount > 0 && strcmp(tokens[0], "stop") == 0) {
             printf("Stopping test environment...\n");
             testEnvironmentStop();
         } else if (tokensCount > 0 && strcmp(tokens[0], "te:add")  == 0 ) {
@@ -132,16 +138,17 @@ void listenForInput() {
             printf("Unrecognized command \"%s\"\n", input);
         }
 
+
         // Free the tokens and all their data
         for (int i = 0; i < tokensCount; i++) {
             free(tokens[i]);
         }
+
         free(tokens);
         free(input);
     }
 
-    free(testEnvironment->label);
-    free(testEnvironment);
+    free(activeTestEnvironment->label);
 }
 
 void startServer() {
@@ -149,7 +156,9 @@ void startServer() {
 }
 
 int main() {
-    readTestEnvironmentsFromConfig();
+    activeTestEnvironment = (TestEnvironment*)malloc(sizeof(TestEnvironment));
+    testEnvironmentList = (TestEnvironmentList*)malloc(sizeof(TestEnvironmentList));
+    testEnvironmentList = readTestEnvironmentsFromConfig();
     listenForInput();
     return 0;
 }
