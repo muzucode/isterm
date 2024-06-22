@@ -217,10 +217,9 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
     return environments;
 }
 
-char** parseStartCommands(TestEnvironment* te) {
+char** parseStartCommands(TestEnvironment* te, int* nCommands) {
     char** commands;
     char** finalCommands;
-    int nCommands = 0;
     char buf[256];
 
 
@@ -235,9 +234,7 @@ char** parseStartCommands(TestEnvironment* te) {
     int bufIndex = 0;
     while(te->start[startIndex] != ']') {
         buf[bufIndex] = te->start[startIndex]; // +1 to get past the first bracket
-        printf("Reading char: %c\n", te->start[startIndex]);
-        startIndex++;
-        bufIndex++;
+        startIndex++; bufIndex++;
     }
     buf[bufIndex] = '\0';
 
@@ -251,14 +248,13 @@ char** parseStartCommands(TestEnvironment* te) {
         commands[nTokens] = strdup(tok);
         tok = strtok(NULL, ",");
         nTokens++;
-        nCommands++;
+        (*nCommands)++;
     }
 
     // Remove quotes from each commands
-    for(int j = 0; j < nCommands; j++) {
+    for(int j = 0; j < (*nCommands); j++) {
         commands[j][strlen(commands[j])-1] = '\0'; // null-term both commands
         finalCommands[j] = strdup(&commands[j][1]);
-        printf("New trimmed string:%s\n", finalCommands[j]);
     }
 
     free(commands);

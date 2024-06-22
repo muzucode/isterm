@@ -18,12 +18,22 @@ void getActiveEnvironment() {
 
 void startTe() {
     printf("Starting test environment...\n");   
-    parseStartCommands(activeTestEnvironment);
+    int nCommands = 0;
+    char** commands = (char**)malloc(MAX_START_COMMANDS * sizeof(char*)); 
+
+    // Get all the commands separated by commas
+    commands = parseStartCommands(activeTestEnvironment, &nCommands);
+
+    // Print each command
+    for(int j = 0; j < nCommands; j++) {
+        printf("Loaded command %d:%s\n",j, commands[j]);
+    }
+
+    //TODO:  Parse the commands by ' ', then run those args inside an exec() statement
     return;
 
-    
-    pid_t p = fork();
 
+    pid_t p = fork();
     if (p < 0) {
         perror("Error forking child process");
         exit(1);
