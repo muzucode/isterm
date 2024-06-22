@@ -228,7 +228,7 @@ void parseStartCommands(TestEnvironment* te) {
         perror("Error mallocing commands\n");
     }
 
-    // Put string from inside [] into buf
+    // Read entire start value 
     int startIndex = 1;
     int bufIndex = 0;
     while(te->start[startIndex] != ']') {
@@ -237,20 +237,21 @@ void parseStartCommands(TestEnvironment* te) {
         startIndex++;
         bufIndex++;
     }
-
     buf[bufIndex] = '\0';
-    printf("Start commands string read into buf:%s\n", buf);
 
+
+
+    // Parse commands by comma
     char* tok = strtok(buf, ",");
 
     int nTokens = 0;
     while(tok != NULL) {
+        commands[nTokens] = strdup(tok);
         tok = strtok(NULL, ",");
-        printf("Token %d: %s\n", nTokens, tok);
-        commands[nTokens++] = strdup(tok);
+        nTokens++;
     }
 
 
 
-    // return commands;
+    return commands;
 }
