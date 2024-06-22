@@ -217,8 +217,10 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
     return environments;
 }
 
-void parseStartCommands(TestEnvironment* te) {
+char** parseStartCommands(TestEnvironment* te) {
     char** commands;
+    char** finalCommands;
+    int nCommands = 0;
     char buf[256];
 
 
@@ -249,9 +251,17 @@ void parseStartCommands(TestEnvironment* te) {
         commands[nTokens] = strdup(tok);
         tok = strtok(NULL, ",");
         nTokens++;
+        nCommands++;
     }
 
+    // Remove quotes from each commands
+    for(int j = 0; j < nCommands; j++) {
+        commands[j][strlen(commands[j])-1] = '\0'; // null-term both commands
+        finalCommands[j] = strdup(&commands[j][1]);
+        printf("New trimmed string:%s\n", finalCommands[j]);
+    }
 
+    free(commands);
 
-    return commands;
+    return finalCommands;
 }
