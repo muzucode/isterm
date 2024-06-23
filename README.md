@@ -7,24 +7,24 @@ Manage a Docker-Compose based testing environment that I use to conduct local pe
 Set the testing environment you want to manage
 
 ```bash
-(-) isT> te:use # use default test environment
+(-) isT> use vsis-network # use the 'vsis-network' testing environment
 
     |
     |
     v
 
-(d) isT>
+(vsis-network) isT>
 ```
 
-Start the docker compose network
+Start the Docker Compose-based network
 
 ```bash
-(d) isT> te:start
+(vsis-network) isT> start
 ```
 
-Stop the docker compose network
+Start the Docker Compose-based network
 
 ```bash
-(d) isT> te:stop
+(vsis-network) isT> stop
 ```
 
