@@ -12,8 +12,9 @@
 TestEnvironment* activeTestEnvironment;
 TestEnvironmentList* testEnvironmentList;
 
-void getActiveEnvironment() {
-
+void resetActiveTestingEnvironment() {
+    free(activeTestEnvironment);
+    activeTestEnvironment = (TestEnvironment*)malloc(sizeof(TestEnvironment));
 }
 
 void startTe() {
@@ -109,6 +110,14 @@ int setActiveTestingEnvironment(char* label) {
 
 }
 
+void printShellStamp() {
+    if(activeTestEnvironment->label == NULL) {
+        printf("(-) %s ", SHELL_PREFIX);
+    } else {
+        printf("(%s) %s ", activeTestEnvironment->label, SHELL_PREFIX);
+    }
+}
+
 void listenForInput() {
     char buf[128];
     char* input = NULL;
@@ -116,14 +125,9 @@ void listenForInput() {
     int tokensCount;
 
 
-    activeTestEnvironment->label = strdup("-");
-    if (activeTestEnvironment->label == NULL) {
-        perror("Error strdup testEnvironment->label");
-        exit(1);
-    }
-
     while (1) {
-        printf("(%s) %s ", activeTestEnvironment->label, SHELL_PREFIX);
+
+        printShellStamp();
 
         if (fgets(buf, sizeof(buf), stdin) == NULL) {
             perror("Error reading input");
@@ -165,8 +169,14 @@ void listenForInput() {
                     printf("Invalid environment \"%s\". Run \"list\" to see a list of available environments.\n", tokens[1]);
                     continue;
                 }
+            } else {
+                printf("No environment specified.  If you'd like to reset your shell to the default 'environment-less' state (-), run 'reset'.\n");
             }
+        } else if (tokensCount > 0 && strcmp(tokens[0], "reset") == 0) {
+                resetActiveTestingEnvironment();
         } else if (tokensCount > 0 && strcmp(tokens[0], "start") == 0) {
+            // TODO: Add handling to prevent "start" if no activeEnvironment is set
+            
             startTe();
         } else if (tokensCount > 0 && strcmp(tokens[0], "stop") == 0) {
             printf("Stopping test environment...\n");
@@ -188,21 +198,12 @@ void listenForInput() {
         free(input);
     }
 
-    free(activeTestEnvironment->label);
-}
 
-void print_stack_limit() {
-    // struct rlimit rl;
-    // if (getrlimit(RLIMIT_STACK, &rl) == 0) {
-    //     printf("Stack size limit: %ld bytes\n", rl.rlim_cur);
-    // } else {
-    //     perror("getrlimit");
-    // }
+    free(activeTestEnvironment->label);
 }
 
 
 int main() {
-    // print_stack_limit();
     activeTestEnvironment = (TestEnvironment*)malloc(sizeof(TestEnvironment));
     testEnvironmentList = (TestEnvironmentList*)malloc(sizeof(TestEnvironmentList));
     testEnvironmentList = readTestEnvironmentsFromConfig(); // malloc for each env in list
