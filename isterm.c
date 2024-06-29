@@ -15,6 +15,8 @@ TestEnvironmentList* testEnvironmentList;
 
 
 void resetActiveTestingEnvironment() {
+    // TODO: If activeTestEnvironment is not null, free it
+    // and all of its fields
     activeTestEnvironment = (TestEnvironment*)malloc(sizeof(TestEnvironment));
     if(activeTestEnvironment == NULL) {
         perror("Errored mallocing activeTestEnvironment");
