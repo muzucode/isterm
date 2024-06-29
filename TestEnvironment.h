@@ -49,11 +49,16 @@ void addTestEnvironment(TestEnvironmentList *list, TestEnvironment *env) {
 
 
 TestEnvironment* findTestEnvironmentByLabel(TestEnvironmentList *list, const char *label) {
+    printf("Error on accessing first element of environment list on second go around\n");
+    printf("Size of list: %zu\n", list->size);
+    printf("label found: %s\n", list->environments[1].label);
     for (size_t i = 0; i < list->size; i++) {
+        // printf("label found: %s\n", list->environments[i].label);
         if (strcmp(list->environments[i].label, label) == 0) {
             return &list->environments[i];
         }
     }
+    printf("Environment not found\n");
     return NULL; // Not found
 }
 
@@ -64,10 +69,14 @@ TestEnvironment* getActiveTestEnvironment() {
     return te;
 }
 
-void testEnvironmentToString(TestEnvironment* testEnvironment) {
+void printTestEnvironment(TestEnvironment* testEnvironment) {
     // TODO: Implement
     printf("Label: %s\n", testEnvironment->label);
     printf("Project Root: %s\n", testEnvironment->projectRoot);
+    printf("Description: %s\n", testEnvironment->description);
+    printf("Technology: %s\n", testEnvironment->technology);
+    printf("Start: %s\n", testEnvironment->start);
+    printf("Stop: %s\n", testEnvironment->stop);
 }
 
 
@@ -125,9 +134,9 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
     char* envPropValue;
     TestEnvironment* te;
     bool insideEnvConfigBlock = false;
-    TestEnvironmentList* environments;
+    TestEnvironmentList* envList;
 
-    initTestEnvironmentList(environments);
+    initTestEnvironmentList(envList);
 
 
     file = fopen(environmentsFile, "r");
@@ -143,7 +152,7 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
         // mark as no longer inside envConfigBlock and re-loop
         if(strlen(buf) == 1 && (strcmp(buf, "\n") == 0)) {
             if(insideEnvConfigBlock) {
-                addTestEnvironment(environments, te);
+                addTestEnvironment(envList, te);
                 printf("Loaded test environment: %s\n", te->label);
             }
             // Reached end of env block
@@ -214,7 +223,7 @@ TestEnvironmentList* readTestEnvironmentsFromConfig() {
 
     }
 
-    return environments;
+    return envList;
 }
 
 char** parseStartCommands(TestEnvironment* te, int* nCommands) {
@@ -260,4 +269,32 @@ char** parseStartCommands(TestEnvironment* te, int* nCommands) {
     free(commands);
 
     return finalCommands;
+}
+
+void freeTestEnvironment(TestEnvironment* te) {
+    free(te->label);
+    free(te->projectRoot);
+    free(te->start);
+    free(te->stop);
+    free(te);
+}
+
+int testEnvironmentUnset(TestEnvironment* te, int debugMode) {
+    int isUnset;
+
+    if (te->label == NULL && te->projectRoot == NULL && te->start == NULL && te->stop == NULL) {
+        isUnset = 1;
+    } else {
+        isUnset = 0;
+    }
+    
+    if(debugMode == 1) {
+        if(isUnset == 1) {
+            printf("The test environment is UNSET: %d\n", isUnset);
+        } else {
+            printf("The test environment is SET: %d\n", isUnset);
+        }
+    } 
+
+    return isUnset;
 }

@@ -12,9 +12,24 @@
 TestEnvironment* activeTestEnvironment;
 TestEnvironmentList* testEnvironmentList;
 
+
+
 void resetActiveTestingEnvironment() {
-    free(activeTestEnvironment);
+    int isTestEnvironmentUnset;
+    printf("Active Test Environment");
+    printTestEnvironment(activeTestEnvironment);
+
+    isTestEnvironmentUnset = testEnvironmentUnset(activeTestEnvironment, 1);
+    freeTestEnvironment(activeTestEnvironment);
+    isTestEnvironmentUnset = testEnvironmentUnset(activeTestEnvironment, 1);
+
+
+
     activeTestEnvironment = (TestEnvironment*)malloc(sizeof(TestEnvironment));
+    if(activeTestEnvironment == NULL) {
+        perror("Errored mallocing activeTestEnvironment");
+        exit(1);
+    }
 }
 
 void startTe() {
@@ -100,11 +115,11 @@ char** parseTokens(char* input, int* tokensCount) {
 }
 
 int setActiveTestingEnvironment(char* label) {
-    TestEnvironment* teBuf = findTestEnvironmentByLabel(testEnvironmentList, label);
-    if(teBuf == NULL) {
+    activeTestEnvironment = findTestEnvironmentByLabel(testEnvironmentList, label);
+    printf("Made it\n");
+    if(activeTestEnvironment == NULL) {
         return 1;
     } else {
-        activeTestEnvironment = teBuf;
         return 0;
     }
 
@@ -196,7 +211,8 @@ void listenForInput() {
 
         free(tokens);
         free(input);
-    }
+        
+    } // end while()
 
 
     free(activeTestEnvironment->label);
