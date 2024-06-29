@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include <string.h>
 
+// TOML File must end in at least two newlines to circumvent issues with
+// EOF not being detected
+
 #define MAX_START_COMMANDS 6
 
 typedef struct {
@@ -49,9 +52,8 @@ void addTestEnvironment(TestEnvironmentList *list, TestEnvironment *env) {
 
 
 TestEnvironment* findTestEnvironmentByLabel(TestEnvironmentList *list, const char *label) {
-    printf("Error on accessing first element of environment list on second go around\n");
-    printf("Size of list: %zu\n", list->size);
-    printf("label found: %s\n", list->environments[1].label);
+    // printf("Size of list: %zu\n", list->size);
+    // printf("label found: %s\n", list->environments[1].label);
     for (size_t i = 0; i < list->size; i++) {
         // printf("label found: %s\n", list->environments[i].label);
         if (strcmp(list->environments[i].label, label) == 0) {

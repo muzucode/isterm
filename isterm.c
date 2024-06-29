@@ -6,6 +6,7 @@
 #include <fcntl.h>
 
 // This shell administers usage of test environments
+// FIXME: There is a memory leak somewhere with 'use'ing environments and resetting them
 
 #define SHELL_PREFIX "isT>"
 #define MAX_TOKENS_AMOUNT 16
@@ -115,22 +116,26 @@ char** parseTokens(char* input, int* tokensCount) {
 }
 
 int setActiveTestingEnvironment(char* label) {
-    activeTestEnvironment = findTestEnvironmentByLabel(testEnvironmentList, label);
+    // FIXME: Even if it's invalid label, it's setting the activeTestEnvironment to NULL
+    TestEnvironment* environmentFound = findTestEnvironmentByLabel(testEnvironmentList, label);
     printf("Made it\n");
-    if(activeTestEnvironment == NULL) {
+    if(environmentFound == NULL) {
         return 1;
     } else {
+        activeTestEnvironment = environmentFound;
         return 0;
     }
 
 }
 
 void printShellStamp() {
+    printf("Printing environment label in stamp: %s\n", activeTestEnvironment->label);
     if(activeTestEnvironment->label == NULL) {
         printf("(-) %s ", SHELL_PREFIX);
     } else {
         printf("(%s) %s ", activeTestEnvironment->label, SHELL_PREFIX);
     }
+    // printf("\nPrinted the prefix\n");
 }
 
 void listenForInput() {
