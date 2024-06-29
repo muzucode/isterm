@@ -6,7 +6,6 @@
 #include <fcntl.h>
 
 // This shell administers usage of test environments
-// FIXME: There is a memory leak somewhere with 'use'ing environments and resetting them
 
 #define SHELL_PREFIX "isT>"
 #define MAX_TOKENS_AMOUNT 16
@@ -16,16 +15,6 @@ TestEnvironmentList* testEnvironmentList;
 
 
 void resetActiveTestingEnvironment() {
-    int isTestEnvironmentUnset;
-    printf("Active Test Environment");
-    printTestEnvironment(activeTestEnvironment);
-
-    isTestEnvironmentUnset = testEnvironmentUnset(activeTestEnvironment, 1);
-    freeTestEnvironment(activeTestEnvironment);
-    isTestEnvironmentUnset = testEnvironmentUnset(activeTestEnvironment, 1);
-
-
-
     activeTestEnvironment = (TestEnvironment*)malloc(sizeof(TestEnvironment));
     if(activeTestEnvironment == NULL) {
         perror("Errored mallocing activeTestEnvironment");
@@ -116,9 +105,7 @@ char** parseTokens(char* input, int* tokensCount) {
 }
 
 int setActiveTestingEnvironment(char* label) {
-    // FIXME: Even if it's invalid label, it's setting the activeTestEnvironment to NULL
     TestEnvironment* environmentFound = findTestEnvironmentByLabel(testEnvironmentList, label);
-    printf("Made it\n");
     if(environmentFound == NULL) {
         return 1;
     } else {
@@ -129,7 +116,6 @@ int setActiveTestingEnvironment(char* label) {
 }
 
 void printShellStamp() {
-    printf("Printing environment label in stamp: %s\n", activeTestEnvironment->label);
     if(activeTestEnvironment->label == NULL) {
         printf("(-) %s ", SHELL_PREFIX);
     } else {

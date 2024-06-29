@@ -53,11 +53,10 @@ void addTestEnvironment(TestEnvironmentList *list, TestEnvironment *env) {
 
 TestEnvironment* findTestEnvironmentByLabel(TestEnvironmentList *list, const char *label) {
     // printf("Size of list: %zu\n", list->size);
-    // printf("label found: %s\n", list->environments[1].label);
     for (size_t i = 0; i < list->size; i++) {
-        // printf("label found: %s\n", list->environments[i].label);
+        // printf("Label found: %s\n", list->environments[i].label);
         if (strcmp(list->environments[i].label, label) == 0) {
-            return &list->environments[i];
+            return &list->environments[i];  
         }
     }
     printf("Environment not found\n");
@@ -284,7 +283,8 @@ void freeTestEnvironment(TestEnvironment* te) {
 int testEnvironmentUnset(TestEnvironment* te, int debugMode) {
     int isUnset;
 
-    if (te->label == NULL && te->projectRoot == NULL && te->start == NULL && te->stop == NULL) {
+
+    if (te == NULL) {
         isUnset = 1;
     } else {
         isUnset = 0;
@@ -292,9 +292,9 @@ int testEnvironmentUnset(TestEnvironment* te, int debugMode) {
     
     if(debugMode == 1) {
         if(isUnset == 1) {
-            printf("The test environment is UNSET: %d\n", isUnset);
+            printf("The test environment is UNSET.\n");
         } else {
-            printf("The test environment is SET: %d\n", isUnset);
+            printf("The test environment is SET.\n");
         }
     } 
 
