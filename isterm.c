@@ -38,7 +38,7 @@ void startTe() {
     }
 
     //TODO:  Parse the commands by ' ', then run those args inside an exec() statement
-    return;
+    exit(1);
 
 
     pid_t p = fork();
