@@ -27,18 +27,32 @@ void resetActiveTestingEnvironment() {
 void startTe() {
     printf("Starting test environment...\n");   
     int nCommands = 0;
-    char** commands = (char**)malloc(MAX_START_COMMANDS * sizeof(char*)); 
+    char** commands = (char**)malloc(MAX_START_STOP_COMMANDS * sizeof(char*)); 
+    char** args = (char**)malloc(MAX_START_STOP_COMMANDS_ARGUMENTS * sizeof(char*));
 
     // Get all the commands separated by commas
     commands = parseStartCommands(activeTestEnvironment, &nCommands);
+
+
+    // Parse arguments from command
+    for(int i = 0; i < nCommands; i++) {
+        int nArgs = 0;
+        char* arg = strtok(commands[i], " ");
+        args[0] = strdup(arg);
+        // printf("arg %d: %s\n", nArgs, args[i]);
+
+        while(arg != NULL) {
+            arg = strtok(NULL, " ");
+            args[nArgs++] = strdup(arg);
+            printf("arg %d: %s\n", nArgs, args[nArgs]);
+        }
+    }
+    exit(1);
 
     // Print each command
     for(int j = 0; j < nCommands; j++) {
         printf("Loaded command %d:%s\n",j, commands[j]);
     }
-
-    //TODO:  Parse the commands by ' ', then run those args inside an exec() statement
-    exit(1);
 
 
     pid_t p = fork();
@@ -55,10 +69,7 @@ void startTe() {
             perror("Error opening /dev/null");
             exit(1);
         }
-        
-        // TODO: Implement Run start command for activeTestEnvironment
-        // char** args = activeTestEnvironment->start;
-        // execvp(args[0], args);
+        execvp(commands[0], commands);
         exit(0);  // Ensure the child process exits
     }
 }

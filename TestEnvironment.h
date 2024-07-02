@@ -7,7 +7,8 @@
 // TOML File must end in at least two newlines to circumvent issues with
 // EOF not being detected
 
-#define MAX_START_COMMANDS 6
+#define MAX_START_STOP_COMMANDS 6
+#define MAX_START_STOP_COMMANDS_ARGUMENTS 10
 
 typedef struct {
     char* label; 
@@ -234,7 +235,7 @@ char** parseStartCommands(TestEnvironment* te, int* nCommands) {
 
 
     // Malloc memory for commands
-    commands = (char**)malloc(MAX_START_COMMANDS * sizeof(char*));
+    commands = (char**)malloc(MAX_START_STOP_COMMANDS * sizeof(char*));
     if(commands == NULL ) {
         perror("Error mallocing commands\n");
     }
